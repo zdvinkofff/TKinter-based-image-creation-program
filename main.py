@@ -23,6 +23,10 @@ class DrawingApp:
         self.canvas.bind('<B1-Motion>', self.paint)
         self.canvas.bind('<ButtonRelease-1>', self.reset)
 
+        self.root.bind('<Alt-s>', self.save_image)
+        self.root.bind('<Alt-c>', self.choose_color)
+        self.root.bind('<Button-3>', self.pick_color)
+
     def pick_color(self, event):
         x, y = event.x, event.y
         color = self.image.getpixel((x, y))
@@ -56,6 +60,8 @@ class DrawingApp:
 
         self.canvas.bind('<Button-3>', self.pick_color)
 
+
+
     def paint(self, event):
         brush_size = int(self.brush_size_option.get())
         if self.last_x and self.last_y:
@@ -76,11 +82,13 @@ class DrawingApp:
         self.image = Image.new("RGB", (600, 400), "white")
         self.draw = ImageDraw.Draw(self.image)
 
-    def choose_color(self):
-        self.pen_color = colorchooser.askcolor(color=self.pen_color)[1]
-        self.previous_color = self.pen_color  # Обновляем предыдущий цвет
+    def choose_color(self, event=None):
+        color = colorchooser.askcolor(color=self.pen_color)
+        if color[1]:
+            self.pen_color = color[1]
+            self.previous_color = self.pen_color
 
-    def save_image(self):
+    def save_image(self, event=None):
         file_path = filedialog.asksaveasfilename(filetypes=[('PNG files', '*.png')])
         if file_path:
             if not file_path.endswith('.png'):
