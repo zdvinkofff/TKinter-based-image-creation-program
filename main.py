@@ -23,6 +23,12 @@ class DrawingApp:
         self.canvas.bind('<B1-Motion>', self.paint)
         self.canvas.bind('<ButtonRelease-1>', self.reset)
 
+    def pick_color(self, event):
+        x, y = event.x, event.y
+        color = self.image.getpixel((x, y))
+        self.pen_color = '#%02x%02x%02x' % color
+        self.previous_color = self.pen_color
+
     def setup_ui(self):
         control_frame = tk.Frame(self.root)
         control_frame.pack(fill=tk.X)
@@ -47,6 +53,8 @@ class DrawingApp:
 
         self.eraser_button = tk.Button(control_frame, text="Ластик", command=self.use_eraser)
         self.eraser_button.pack(side=tk.LEFT)
+
+        self.canvas.bind('<Button-3>', self.pick_color)
 
     def paint(self, event):
         brush_size = int(self.brush_size_option.get())
