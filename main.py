@@ -18,6 +18,7 @@ class DrawingApp:
 
         self.last_x, self.last_y = None, None
         self.pen_color = 'black'
+        self.previous_color = self.pen_color
 
         self.canvas.bind('<B1-Motion>', self.paint)
         self.canvas.bind('<ButtonRelease-1>', self.reset)
@@ -43,6 +44,10 @@ class DrawingApp:
         brush_size_menu = tk.OptionMenu(control_frame, self.brush_size_option, *[str(size) for size in self.brush_sizes])
         brush_size_menu.pack(side=tk.LEFT)
 
+
+        self.eraser_button = tk.Button(control_frame, text="Ластик", command=self.use_eraser)
+        self.eraser_button.pack(side=tk.LEFT)
+
     def paint(self, event):
         brush_size = int(self.brush_size_option.get())
         if self.last_x and self.last_y:
@@ -65,6 +70,7 @@ class DrawingApp:
 
     def choose_color(self):
         self.pen_color = colorchooser.askcolor(color=self.pen_color)[1]
+        self.previous_color = self.pen_color  # Обновляем предыдущий цвет
 
     def save_image(self):
         file_path = filedialog.asksaveasfilename(filetypes=[('PNG files', '*.png')])
@@ -74,6 +80,15 @@ class DrawingApp:
             self.image.save(file_path)
             messagebox.showinfo("Информация", "Изображение успешно сохранено!")
 
+    def use_eraser(self):
+        self.previous_color = self.pen_color
+        self.pen_color = "white"
+        self.canvas.config(cursor="dot")
+
+    def return_to_brush(self):
+        self.pen_color = self.previous_color
+        self.canvas.config(cursor="")
+
 def main():
     root = tk.Tk()
     app = DrawingApp(root)
@@ -81,3 +96,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
