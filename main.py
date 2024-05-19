@@ -2,6 +2,7 @@ import tkinter as tk
 from tkinter import colorchooser, filedialog, messagebox, simpledialog
 from tkinter import ttk
 from PIL import Image, ImageDraw
+from PIL import ImageDraw, ImageFont
 
 class DrawingApp:
     def __init__(self, root):
@@ -31,6 +32,28 @@ class DrawingApp:
         self.root.bind('<Alt-s>', self.save_image)
         self.root.bind('<Alt-c>', self.choose_color)
 
+        self.canvas.bind('<Double-1>', self.add_text)
+
+    def add_text(self, event):
+        save_image = messagebox.askyesno("Сохранить рисунок?",
+                                         "Хотите сохранить текущий рисунок перед добавлением текста?")
+        if save_image:
+            self.save_image()
+
+        text = simpledialog.askstring("Добавить текст", "Введите текст:")
+        if text:
+            x, y = event.x, event.y
+            self.canvas.create_text(x, y, text=text, fill=self.pen_color, font=("Arial", 16))
+
+            font = ImageFont.truetype("arial.ttf", 16)
+            self.draw.text((x, y), text, font=font, fill=self.pen_color)
+
+
+    def change_background_color(self):
+        new_color = colorchooser.askcolor(color=self.canvas["bg"])[1]
+        if new_color:
+             self.canvas.config(background=new_color)
+
     def change_canvas_size(self):
         new_width = simpledialog.askinteger("Новый размер холста", "Введите новую ширину:")
         new_height = simpledialog.askinteger("Новый размер холста", "Введите новую высоту:")
@@ -38,6 +61,15 @@ class DrawingApp:
             self.canvas.config(width=new_width, height=new_height)
             self.image = Image.new("RGB", (new_width, new_height), "white")
             self.draw = ImageDraw.Draw(self.image)
+            self.clear_canvas()
+
+    def save_image(self, event=None):
+        file_path = filedialog.asksaveasfilename(filetypes=[('PNG files', '*.png')])
+        if file_path:
+            if not file_path.endswith('.png'):
+                file_path += '.png'
+            self.image.save(file_path)
+            messagebox.showinfo("Информация", "Изображение успешно сохранено!")
 
     def setup_ui(self):
         control_frame = tk.Frame(self.root)
@@ -74,6 +106,12 @@ class DrawingApp:
 
         self.eraser_button = tk.Button(control_frame, text="Ластик", command=self.use_eraser)
         self.eraser_button.pack(side=tk.LEFT)
+
+        text_button = tk.Button(control_frame, text="Текст", command=self.add_text)
+        text_button.pack(side=tk.LEFT)
+
+        change_background_button = tk.Button(control_frame, text="Изменить фон", command=self.change_background_color)
+        change_background_button.pack(side=tk.LEFT)
 
     def paint(self, event):
         brush_size = int(self.brush_size_option.get())
