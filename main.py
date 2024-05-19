@@ -1,5 +1,6 @@
 import tkinter as tk
-from tkinter import colorchooser, filedialog, messagebox
+from tkinter import colorchooser, filedialog, messagebox, simpledialog
+from tkinter import ttk
 from PIL import Image, ImageDraw
 
 class DrawingApp:
@@ -25,17 +26,18 @@ class DrawingApp:
 
         self.canvas.bind('<B1-Motion>', self.paint)
         self.canvas.bind('<ButtonRelease-1>', self.reset)
+        self.canvas.bind('<Button-3>', self.pick_color)
 
         self.root.bind('<Alt-s>', self.save_image)
         self.root.bind('<Alt-c>', self.choose_color)
-        self.root.bind('<Button-3>', self.pick_color)
 
-    def pick_color(self, event):
-        x, y = event.x, event.y
-        color = self.image.getpixel((x, y))
-        self.pen_color = '#%02x%02x%02x' % color
-        self.previous_color = self.pen_color
-        self.update_color_preview()
+    def change_canvas_size(self):
+        new_width = simpledialog.askinteger("Новый размер холста", "Введите новую ширину:")
+        new_height = simpledialog.askinteger("Новый размер холста", "Введите новую высоту:")
+        if new_width is not None and new_height is not None:
+            self.canvas.config(width=new_width, height=new_height)
+            self.image = Image.new("RGB", (new_width, new_height), "white")
+            self.draw = ImageDraw.Draw(self.image)
 
     def setup_ui(self):
         control_frame = tk.Frame(self.root)
@@ -50,6 +52,9 @@ class DrawingApp:
         save_button = tk.Button(control_frame, text="Сохранить", command=self.save_image)
         save_button.pack(side=tk.LEFT)
 
+        change_size_button = tk.Button(control_frame, text="Изменить размер холста", command=self.change_canvas_size)
+        change_size_button.pack(side=tk.LEFT)
+
         brush_size_label = tk.Label(control_frame, text="Размер кисти:")
         brush_size_label.pack(side=tk.LEFT)
 
@@ -58,19 +63,37 @@ class DrawingApp:
         brush_size_menu = tk.OptionMenu(control_frame, self.brush_size_option, *[str(size) for size in self.brush_sizes])
         brush_size_menu.pack(side=tk.LEFT)
 
+        self.graph_style = tk.StringVar(self.root)
+        self.graph_style.set("solid")
+        graph_style_label = tk.Label(control_frame, text="Стиль графика:")
+        graph_style_label.pack(side=tk.LEFT)
+
+        graph_style_menu = ttk.Combobox(control_frame, textvariable=self.graph_style,
+                                       values=["solid", "dash", "dot", "dashdot"])
+        graph_style_menu.pack(side=tk.LEFT)
+
         self.eraser_button = tk.Button(control_frame, text="Ластик", command=self.use_eraser)
         self.eraser_button.pack(side=tk.LEFT)
-
-        self.canvas.bind('<Button-3>', self.pick_color)
 
     def paint(self, event):
         brush_size = int(self.brush_size_option.get())
         if self.last_x and self.last_y:
-            self.canvas.create_line(self.last_x, self.last_y, event.x, event.y,
-                                   width=brush_size, fill=self.pen_color,
-                                   capstyle=tk.ROUND, smooth=tk.TRUE)
+            if self.graph_style.get() == "solid":
+                self.canvas.create_line(self.last_x, self.last_y, event.x, event.y,
+                                        width=brush_size, fill=self.pen_color,
+                                        capstyle=tk.ROUND, smooth=tk.TRUE)
+            else:
+                dash_patterns = {
+                    "dash": (4, 4),
+                    "dot": (2, 2),
+                    "dashdot": (4, 2, 2, 2)
+                }
+                self.canvas.create_line(self.last_x, self.last_y, event.x, event.y,
+                                        width=brush_size, fill=self.pen_color,
+                                        capstyle=tk.ROUND, smooth=tk.TRUE,
+                                        dash=dash_patterns.get(self.graph_style.get(), None))
             self.draw.line([self.last_x, self.last_y, event.x, event.y], fill=self.pen_color,
-                          width=brush_size)
+                           width=brush_size)
 
         self.last_x = event.x
         self.last_y = event.y
@@ -89,6 +112,13 @@ class DrawingApp:
             self.pen_color = color[1]
             self.previous_color = self.pen_color
             self.update_color_preview()
+
+    def pick_color(self, event):
+        x, y = event.x, event.y
+        color = self.image.getpixel((x, y))
+        self.pen_color = '#%02x%02x%02x' % color
+        self.previous_color = self.pen_color
+        self.update_color_preview()
 
     def save_image(self, event=None):
         file_path = filedialog.asksaveasfilename(filetypes=[('PNG files', '*.png')])
@@ -119,5 +149,6 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
