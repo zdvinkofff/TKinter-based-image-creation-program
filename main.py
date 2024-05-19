@@ -13,6 +13,9 @@ class DrawingApp:
         self.canvas = tk.Canvas(root, width=600, height=400, bg='white')
         self.canvas.pack()
 
+        self.color_preview_canvas = tk.Canvas(root, width=50, height=50, bg='black')
+        self.color_preview_canvas.pack(side=tk.RIGHT, padx=10, pady=10)
+
         self.brush_sizes = [1, 2, 5, 10]
         self.setup_ui()
 
@@ -32,6 +35,7 @@ class DrawingApp:
         color = self.image.getpixel((x, y))
         self.pen_color = '#%02x%02x%02x' % color
         self.previous_color = self.pen_color
+        self.update_color_preview()
 
     def setup_ui(self):
         control_frame = tk.Frame(self.root)
@@ -54,13 +58,10 @@ class DrawingApp:
         brush_size_menu = tk.OptionMenu(control_frame, self.brush_size_option, *[str(size) for size in self.brush_sizes])
         brush_size_menu.pack(side=tk.LEFT)
 
-
         self.eraser_button = tk.Button(control_frame, text="Ластик", command=self.use_eraser)
         self.eraser_button.pack(side=tk.LEFT)
 
         self.canvas.bind('<Button-3>', self.pick_color)
-
-
 
     def paint(self, event):
         brush_size = int(self.brush_size_option.get())
@@ -87,6 +88,7 @@ class DrawingApp:
         if color[1]:
             self.pen_color = color[1]
             self.previous_color = self.pen_color
+            self.update_color_preview()
 
     def save_image(self, event=None):
         file_path = filedialog.asksaveasfilename(filetypes=[('PNG files', '*.png')])
@@ -100,10 +102,15 @@ class DrawingApp:
         self.previous_color = self.pen_color
         self.pen_color = "white"
         self.canvas.config(cursor="dot")
+        self.update_color_preview()
 
     def return_to_brush(self):
         self.pen_color = self.previous_color
         self.canvas.config(cursor="")
+        self.update_color_preview()
+
+    def update_color_preview(self):
+        self.color_preview_canvas.configure(bg=self.pen_color)
 
 def main():
     root = tk.Tk()
@@ -112,4 +119,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
