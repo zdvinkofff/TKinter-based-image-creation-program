@@ -28,26 +28,31 @@ class DrawingApp:
         self.canvas.bind('<B1-Motion>', self.paint)
         self.canvas.bind('<ButtonRelease-1>', self.reset)
         self.canvas.bind('<Button-3>', self.pick_color)
+        self.canvas.bind('<Double-1>', self.add_text)
 
         self.root.bind('<Alt-s>', self.save_image)
         self.root.bind('<Alt-c>', self.choose_color)
 
         self.canvas.bind('<Double-1>', self.add_text)
 
-    def add_text(self, event):
+    def add_text(self, event=None):
         save_image = messagebox.askyesno("Сохранить рисунок?",
                                          "Хотите сохранить текущий рисунок перед добавлением текста?")
         if save_image:
             self.save_image()
 
+        if event:
+            x, y = event.x, event.y
+        else:
+            x = self.canvas.winfo_width() // 2
+            y = self.canvas.winfo_height() // 2
+
         text = simpledialog.askstring("Добавить текст", "Введите текст:")
         if text:
-            x, y = event.x, event.y
             self.canvas.create_text(x, y, text=text, fill=self.pen_color, font=("Arial", 16))
 
             font = ImageFont.truetype("arial.ttf", 16)
             self.draw.text((x, y), text, font=font, fill=self.pen_color)
-
 
     def change_background_color(self):
         new_color = colorchooser.askcolor(color=self.canvas["bg"])[1]
